@@ -39,10 +39,13 @@ $(function () {
       return colorString.join('');
     },
     hexCode: function () {
-      var red = this.red.toString(16) < 10 || /^[abcdef]{1}$/.test(this.red.toString(16)) ? 0 + this.red.toString(16) : this.red.toString(16)
-      var green = this.green.toString(16) < 10 || /^[abcdef]{1}$/.test(this.green.toString(16))? 0 + this.green.toString(16) : this.green.toString(16)
-      var blue = this.blue.toString(16) < 10 || /^[abcdef]{1}$/.test(this.blue.toString(16)) ? 0 + this.blue.toString(16) : this.blue.toString(16)
+      var red = this.normalizeHexCode(this.red.toString(16));
+      var green = this.normalizeHexCode(this.green.toString(16));
+      var blue = this.normalizeHexCode(this.blue.toString(16));
       return '#' + red + green + blue;
+    },
+    normalizeHexCode: function(code) {
+      return (code.length < 2) ? "0" + code : code;
     }
   };
 
