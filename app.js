@@ -1,15 +1,12 @@
 $(function () {
-  var i, length;
-  var reds = $('.red');
-  var greens = $('.green');
-  var blues = $('.blue');
   var body = $('body');
+  $('section').height($(window).height() * 0.25);
+  $('header').height($(window).height() * 0.25);
   var backgroundColor = {
-    rgba: 'rgba',
+    rgba: 'rgb',
     red: 0,
     green: 0,
     blue: 0,
-    opacity: 1,
     currentColor: function () {
       var colorString = [
         this.rgba,
@@ -19,8 +16,6 @@ $(function () {
         this.green,
         ",",
         this.blue,
-        ",",
-        this.opacity,
         ")"
       ];
       return colorString.join('');
@@ -29,40 +24,75 @@ $(function () {
       if (color === 'red') { return 'rgba(' + value + ',0,0,1)'; }
       if (color === 'green') { return 'rgba(0,' + value + ',0,1)'; }
       if (color === 'blue') { return 'rgba(0,0,' + value + ',1)'; }
+    },
+    oppositeColor: function () {
+      var colorString = [
+        this.rgba,
+        "(",
+        255 - this.red,
+        ",",
+        255 - this.green,
+        ",",
+        255 - this.blue,
+        ")"
+      ];
+      return colorString.join('');
+    },
+    hexCode: function () {
+      var red = this.red.toString(16) < 10 || /^[abcdef]{1}$/.test(this.red.toString(16)) ? 0 + this.red.toString(16) : this.red.toString(16)
+      var green = this.green.toString(16) < 10 || /^[abcdef]{1}$/.test(this.green.toString(16))? 0 + this.green.toString(16) : this.green.toString(16)
+      var blue = this.blue.toString(16) < 10 || /^[abcdef]{1}$/.test(this.blue.toString(16)) ? 0 + this.blue.toString(16) : this.blue.toString(16)
+      return '#' + red + green + blue;
     }
   };
 
-  for (i = 0, length = reds.length; i < length; i += 1) {
-    reds.eq(i).data('value', i);
-    greens.eq(i).data('value', i);
-    blues.eq(i).data('value', i);
-  }
-
-  $('.color').mouseenter(function () {
+  var mouseMoveEvent = function (event) {
     var swatchedOver = $(this);
-    var swatchColor = swatchedOver.attr('class').match(/[rgb]\w{2,4}/)[0];
-    var swatchColorValue = swatchedOver.data('value');
-    swatchedOver.css('background', backgroundColor.currentSwatch(swatchColor, swatchColorValue));
-  });
-  $('.color').mouseleave(function () {
-    var swatchedOver = $(this);
-    if (!swatchedOver.hasClass('clicked')) { swatchedOver.css('background', 'none'); }
-  });
-  $('.color').click(function () {
-    var clickedSwatch = $(this);
-    if (clickedSwatch.hasClass('clicked')) { return unclick()}
-    var divColor = clickedSwatch.attr('class').match(/[rgb]\w{2,4}/)[0];
-    backgroundColor[divColor] = clickedSwatch.data('value');
-    body.css({background: backgroundColor.currentColor(), transition: 'background .01s linear'});
-    $('.clicked.' + divColor ).toggleClass('clicked').css('background','none');
-    clickedSwatch.toggleClass('clicked');
+    var offsetInDiv = swatchedOver.offset();
+    var relativeXCoord = event.pageX - offsetInDiv.left;
+    var windowWidthFactor = 256 / $('section').width();
+    var swatchColor = swatchedOver.attr('id').match(/[rgb]\w{2,4}/)[0];
+    var swatchColorValue = 255 - Math.floor(relativeXCoord * windowWidthFactor);
+    backgroundColor[swatchColor] = swatchColorValue;
+    swatchedOver.find('h1').text(swatchColorValue);
+    swatchedOver.find('span').text(swatchColorValue.toString(16));
+    $('#rgb').text(backgroundColor.currentColor());
+    $('#hex').text(backgroundColor.hexCode());
+    body.css({background: backgroundColor.currentColor()});
+    $('span, h1').css('color', backgroundColor.oppositeColor());
+    $('#header-div').css('border-color', backgroundColor.oppositeColor());
+  };
 
-    function unclick() {
-      var divColor = clickedSwatch.attr('class').match(/[rgb]\w{2,4}/)[0];
-      clickedSwatch.toggleClass('clicked').css('background','none');
-      backgroundColor[divColor] = 0;
-      console.log(backgroundColor.currentColor())
-      body.css('background', backgroundColor.currentColor());
-    }
-  });
+  var copyToClipboard = function () {
+    var currentColorCode = $(this).data('color-code');
+    prompt('CMD + C || CTRL + C, then enter to copy!', $('#' + currentColorCode).text() );
+  };
+
+  // var swipeEvent = function (event) {
+  //   var swatchedOver = $(this);
+  //   var offsetInDiv = swatchedOver.offset();
+  //   var pageX = event.swipestart.coords[0] - event.swipestop.coords[0];
+  //   console.log(pageX);
+  //   var relativeXCoord = pageX - offsetInDiv.left;
+  //   var windowWidthFactor = 256 / $('section').width();
+  //   var swatchColor = swatchedOver.attr('id').match(/[rgb]\w{2,4}/)[0];
+  //   var swatchColorValue = 255 - Math.floor(relativeXCoord * windowWidthFactor);
+  //   backgroundColor[swatchColor] = swatchColorValue;
+  //   swatchedOver.find('h1').text(swatchColorValue);
+  //   swatchedOver.find('span').text(swatchColorValue.toString(16));
+  //   $('#rgb').text(backgroundColor.currentColor());
+  //   $('#hex').text(backgroundColor.hexCode());
+  //   body.css({background: backgroundColor.currentColor(), transition: 'background .01s linear'});
+  //   $('span, h1').css('color', backgroundColor.oppositeColor())
+  //   console.log(backgroundColor.currentColor())
+  //   console.log($('span').css('color'))
+  // };
+
+  $('section').on('mousemove', mouseMoveEvent)
+              .on('click', function () { $(this).off('mousemove', mouseMoveEvent); })
+              .on('dblclick', function () { $(this).on('mousemove', mouseMoveEvent); });
+  $('.copy').on('click', copyToClipboard);
+
+
+  // $('section').on('swipe', swipeEvent)
 });
